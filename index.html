@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMS-dev Logo Alpha Presets Grid</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f9f9f9;
+    margin: 2rem;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+  .cell {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    text-align: center;
+    cursor: pointer;
+  }
+  .cell.custom {
+    border: 2px solid #333;
+    cursor: default;
+  }
+  svg {
+    width: 160px;
+    height: 160px;
+  }
+  .label {
+    margin-top: .5rem;
+    font-size: 0.85rem;
+    line-height: 1.3;
+  }
+  .editable {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: #eee;
+    min-width: 2.5em;
+  }
+  .editable:focus {
+    background: #fffae0;
+    outline: 1px solid #aaa;
+  }
+</style>
+</head>
+<body>
+<h1>LMS-dev Logo Alpha Presets</h1>
+<div class="grid" id="grid"></div>
+
+<h2>Custom Tuning</h2>
+<div class="grid">
+  <div class="cell custom" id="customCell">
+    <div id="customLogo"></div>
+    <div class="label">
+      <strong>Custom</strong><br>
+      deep=<span id="deepVal" class="editable" contenteditable="true">0.75</span>, 
+      subtle=<span id="subtleVal" class="editable" contenteditable="true">0.55</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const presets = [
+  {name: "Golden φ", deep: 0.618, subtle: 0.382},
+  {name: "Golden²", deep: 0.764, subtle: 0.472},
+  {name: "Silver", deep: 0.828, subtle: 0.414},
+  {name: "Pareto", deep: 0.800, subtle: 0.333},
+  {name: "Harmonics", deep: 0.750, subtle: 0.667},
+  {name: "Geometric roots", deep: 0.707, subtle: 0.577},
+  {name: "Fibonacci", deep: 0.625, subtle: 0.533},
+  {name: "Midpoint", deep: 0.700, subtle: 0.500},
+  {name: "Strong letters", deep: 0.900, subtle: 0.400},
+  {name: "Soft letters", deep: 0.550, subtle: 0.667},
+  {name: "Triadic", deep: 0.667, subtle: 0.444},
+  {name: "7ths", deep: 0.857, subtle: 0.571},
+  {name: "Contrast", deep: 0.9, subtle: 0.5},
+];
+
+function logoTemplate(deep, subtle) {
+  const cube      = `rgba(0,0,0,${deep})`;
+  const letterL   = `rgba(0,255,255,${deep})`;
+  const letterM   = `rgba(255,0,255,${deep})`;
+  const letterS   = `rgba(255,255,0,${deep})`;
+  const faces12   = `rgba(0,255,255,${subtle})`;
+  const faces23   = `rgba(255,0,255,${subtle})`;
+  const faces13   = `rgba(255,255,0,${subtle})`;
+
+  return `
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- black cube -->
+  <g fill="none" stroke="${cube}" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 18 L170 59 L170 141 L100 182 L30 141 L30 59 Z"/>
+    <path d="M30 59 L100 100 L170 59 M100 100 L100 182"/>
+  </g>
+  <!-- cyan L -->
+  <path fill="none" stroke="${letterL}" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"
+    d="M100 182 L30 141 L30 59 L100 18"/>
+  <!-- cyan faces -->
+  <path d="M100 18 L170 59 L100 100 L100 182 L30 141 L30 59 Z" fill="${faces12}" stroke="transparent"/>
+  <!-- magenta M -->
+  <path fill="none" stroke="${letterM}" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"
+    d="M30 141 L30 59 L100 100 L170 59 L170 141"/>
+  <!-- magenta faces -->
+  <path d="M30 141 L30 59 L100 100 L170 59 L170 141 L100 182 Z" fill="${faces23}" stroke="transparent"/>
+  <!-- yellow S -->
+  <path fill="none" stroke="${letterS}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"
+    d="M30 59 L100 18 M30 59 L100 100 M170 59 L100 100 M170 59 L170 141 L100 182"/>
+  <!-- yellow faces -->
+  <path d="M100 18 L30 59 L100 100 L100 182 L170 141 L170 59 Z" fill="${faces13}" stroke="transparent"/>
+</svg>
+  `;
+}
+
+const grid = document.getElementById("grid");
+const customLogo = document.getElementById("customLogo");
+const deepVal = document.getElementById("deepVal");
+const subtleVal = document.getElementById("subtleVal");
+
+function updateCustom() {
+  let deep = parseFloat(deepVal.textContent) || 0.75;
+  let subtle = parseFloat(subtleVal.textContent) || 0.55;
+  deep = Math.min(Math.max(deep, 0), 1);
+  subtle = Math.min(Math.max(subtle, 0), 1);
+  customLogo.innerHTML = logoTemplate(deep, subtle);
+}
+
+presets.forEach(p => {
+  const cell = document.createElement("div");
+  cell.className = "cell";
+  cell.innerHTML = `
+    ${logoTemplate(p.deep, p.subtle)}
+    <div class="label">
+      <strong>${p.name}</strong><br>
+      deep=${p.deep}, subtle=${p.subtle}
+    </div>
+  `;
+  cell.addEventListener("click", () => {
+    deepVal.textContent = p.deep;
+    subtleVal.textContent = p.subtle;
+    updateCustom();
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
+  grid.appendChild(cell);
+});
+
+deepVal.addEventListener("input", updateCustom);
+subtleVal.addEventListener("input", updateCustom);
+
+// initialize
+updateCustom();
+</script>
+</body>
+</html>
